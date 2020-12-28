@@ -1,5 +1,5 @@
 from django import template
-from django.contrib.auth import authenticate,login, logout
+from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.hashers import make_password
@@ -134,11 +134,42 @@ def add_to_cart(request):
 
   return redirect('cart')
 
+@login_required(login_url='login')
+def profile_view(request):
+  user_form = ProfileForm(request.POST or None, prefix='user', instance=request.user)
+  if not request.user.is_superuser and not request.user.is_staff:
+    customer_form = CustomerForm(request.POST or None, prefix='customer', instance=request.user.customer)
+
+  if request.method == 'POST':
+    if user_form.is_valid():
+      user = user_form.save(commit=False)
+      password = make_password(user_form.cleaned_data['password'])
+      if password:
+        user.password = password
+
+      user.save()
+      update_session_auth_hash(request, user)
+
+      if not request.user.is_superuser and not request.user.is_staff:
+        if customer_form.is_valid():
+          customer = customer_form.save(commit=False)
+          customer.user_id = user.id
+          customer.save()
+
+  if not request.user.is_superuser and not request.user.is_staff:
+    context = {
+      'user_form': user_form,
+      'customer_form': customer_form
+    }
+  else:
+    context = {
+      'user_form': user_form,
+    }
+
+  return render(request, 'accounts/profile.html', context)
+
 @anonymous_required('index')
 def login_view(request):
-  if request.user.is_authenticated:
-      return redirect('index')
-
   if request.method == 'POST':
     form = AuthenticationForm(data=request.POST)
     username = request.POST['username']
@@ -210,12 +241,12 @@ def cities(request, id=None):
 
   return HttpResponse(data.decode("utf-8"))
 
-def city(request):
+def city(request, id):
   conn = http.client.HTTPSConnection("api.rajaongkir.com")
 
   headers = { 'key': "833e8c949f70274cf9632f00c45919a8" }
 
-  conn.request("GET", "/starter/city", headers=headers)
+  conn.request("GET", f"/starter/city?id={id}", headers=headers)
 
   res = conn.getresponse()
   data = res.read()

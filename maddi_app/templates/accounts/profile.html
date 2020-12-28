@@ -1,0 +1,118 @@
+{% extends 'layouts/base.html' %}
+
+{% load static %}
+{% load tailwind_filters %}
+
+{% block content %}
+<header class="max-w-lg mx-auto">
+    <a href="{% url 'index' %}">
+        <section class="hero container max-w-screen-lg mx-auto pb-10">
+            <img class="mx-auto" src="../../../static/images/Maddi.png">
+        </section>
+    </a>
+</header>
+
+<main class="bg-white max-w-lg mx-auto p-8 md:p-12 my-10 rounded-lg shadow-2xl" x-data="cities()" x-init="loadCity()">
+    <section>
+        <h3 class="font-bold text-2xl">Welcome to Maddi</h3>
+        <p class="text-gray-600 pt-2">Sign in to your account.</p>
+    </section>
+
+    <section class="mt-6">
+        <form id="login_form" class="flex flex-col" method="POST">
+            {% csrf_token %}
+
+            {{ user_form|crispy }}
+            {% if not user.is_admin and not user.is_staff %}
+                {{ customer_form.phone_number|as_crispy_field }}
+                {{ customer_form.address|as_crispy_field }}
+                <div id="div_id_customer-province" class="mb-3"> 
+                    <label for="id_customer-province" class="block text-gray-700 text-sm font-bold mb-2">
+                        Province<span class="asteriskField">*</span> 
+                    </label> 
+                    <select x-model="selectedProvince" x-on:change="loadCities()">
+                        <template x-for="province in provinces" :key="province">
+                            <option :value="province.province_id" x-text="province.province"></option>
+                        </template>
+                    </select>
+                </div>
+                <template x-if="cities.length > 0">
+                    <div id="div_id_customer-city" class="mb-3"> 
+                        <label for="id_customer-city" class="block text-gray-700 text-sm font-bold mb-2">
+                            City<span class="asteriskField">*</span> 
+                        </label>
+                        <select name="customer-city" x-model="selectedCity">
+                            <template x-for="city in cities" :key="city">
+                                <option :value="city.city_id" x-text="city.city_name"></option>
+                            </template>
+                        </select>
+                    </div>
+                </template>
+                {{ customer_form.postal_code|as_crispy_field }}
+            {% endif %}
+
+        </form>
+        <dv class="flex flex-col">
+            <button class="mt-6 bg-maddi-1 text-white font-bold py-2 rounded shadow-lg hover:shadow-xl transition duration-200" type="submit" form="login_form">Sign In</button>
+        </dv>
+    </section>
+</main>
+
+<div class="max-w-lg mx-auto text-center mt-12 mb-6">
+    <p class="text-black">Don't have an account? <a href="/register" class="font-bold hover:underline">Sign up</a>.</p>
+</div>
+<footer>
+    <section class="mt-10 flex flex-col">
+        <button class="bg-maddi-1 text-white font-bold py-2 rounded shadow-lg hover:shadow-xl transition duration-200" type="button">
+            <a href="{% url 'index' %}">Back to homepage</a>
+        </button>
+    </section>
+</footer>
+{% endblock %}
+
+{% block js %}
+<script>
+    function cities() {
+        return {
+            selectedProvince: 1,
+            selectedCity: 0,
+            provinces: [],
+            cities: [],
+            loadCity() {
+                let self = this;
+                axios.get('http://127.0.0.1:8000/city/' + '{{ request.user.customer.city }}').then(function (response) {
+                    // handle success
+                    self.selectedProvince = response.data.rajaongkir.results.province_id;
+                    self.selectedCity = {{ request.user.customer.city }};
+                    self.loadProvinces();
+                }).catch(function (error) {
+                    // handle error
+                    console.log(error);
+                });
+            },
+            loadProvinces() {
+                let self = this;
+                axios.get('http://127.0.0.1:8000/provinces/').then(function (response) {
+                    // handle success
+                    self.provinces = response.data.rajaongkir.results;
+                    self.loadCities();
+                }).catch(function (error) {
+                    // handle error
+                    console.log(error);
+                });
+            },
+            loadCities() {
+                let self = this;
+                self.cities = [];
+                axios.get('http://127.0.0.1:8000/cities/' + self.selectedProvince).then(function (response) {
+                    // handle success
+                    self.cities = response.data.rajaongkir.results;
+                }).catch(function (error) {
+                    // handle error
+                    console.log(error);
+                });
+            },
+        }
+    }
+</script>
+{% endblock %}
