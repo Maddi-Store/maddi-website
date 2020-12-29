@@ -76,8 +76,7 @@
             <form method="POST" action="{% url 'add_to_cart' %}">
               {% csrf_token %}
               <input type="hidden" name="id" name="quantity" value="{{ item.id }}" readonly>
-              <input class="border h-14 w-24 mt-2 rounded-xl text-center" type="number" id="quantity" name="quantity" min="1" value="1">
-    
+              <input class="border h-14 w-24 mt-2 rounded-xl p-3 text-center" type="number" id="quantity" name="quantity" min="1" value="1">
               <button ype="submit" class="h-14 px-6 mt-2 font-semibold rounded-xl bg-maddi-1 hover:bg-maddi-1 text-white">
                 Add to Cart
               </button>
