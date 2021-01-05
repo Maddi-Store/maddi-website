@@ -57,6 +57,7 @@ def retrieve_item_view(request, id):
     'item': item,
   })
 
+@superuser_required('index')
 def user(request):
   user_list = User.objects.all()
   paginator = Paginator(user_list, 10)
