@@ -72,3 +72,19 @@ input[type=email], select {
   .sm\:focus\:border-maddi-1:focus{
     --tw-border-opacity:1;
     border-color:rgba(152, 130, 90,var(--tw-border-opacity))}
+
+  .w-128 {
+    width: 20rem;
+  }
+  .-mb-2px {
+    margin: -2px;
+  }
+  .px-10 {
+    padding-left: 4rem;
+    padding-right: 4rem;
+  }
+  
+.left-div {
+  float: left;
+  width: 392px;
+  padding-left: 8px;
