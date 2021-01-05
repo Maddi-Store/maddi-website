@@ -13,6 +13,8 @@ from .forms import *
 from .models import *
 import http.client
 
+User = get_user_model()
+
 # @login_required(login_url="/login/")
 def index(request):
   return render(request, 'maddi_app/index.html')
@@ -41,7 +43,7 @@ def create_item_view(request):
       form.save()
       return redirect('shop')
 
-  return render(request, 'maddi_app/item/add.html', {
+  return render(request, 'maddi_app/item/create.html', {
     'form': form,
   })
 
@@ -56,7 +58,6 @@ def retrieve_item_view(request, id):
   })
 
 def user(request):
-  User = get_user_model()
   user_list = User.objects.all()
   paginator = Paginator(user_list, 10)
 
@@ -72,6 +73,44 @@ def user(request):
     'users': users,
   })
 
+@superuser_required('index')
+def create_user_view(request):
+  form = ProfileForm(request.POST or None, prefix='user')
+  if request.method == 'POST':
+    if form.is_valid():
+      form.save()
+      return redirect('user')
+
+  context = {
+    'form': form,
+  }
+
+  return render(request, 'accounts/create.html', context)
+
+@superuser_required('index')
+def update_user_view(request, id):
+  try:
+    user = User.objects.get(pk=id)
+  except User.DoesNotExist:
+    return redirect('user')
+  
+  form = ProfileForm(request.POST or None, prefix='user', instance=user)
+
+  if request.method == 'POST':
+    if form.is_valid():
+      user = form.save(commit=False)
+      password = make_password(form.cleaned_data['password'])
+      if password:
+        user.password = password
+
+      user.save()
+
+  context = {
+    'form': form,
+  }
+
+  return render(request, 'accounts/create.html', context)
+
 @staff_required('index')
 def update_item_view(request, id):
   try:
@@ -86,7 +125,7 @@ def update_item_view(request, id):
       form.save()
       return redirect('shop')
 
-  return render(request, 'maddi_app/item/add.html', {
+  return render(request, 'maddi_app/item/create.html', {
     'form': form,
   })
 
