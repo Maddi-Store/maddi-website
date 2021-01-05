@@ -111,6 +111,16 @@ def update_user_view(request, id):
 
   return render(request, 'accounts/create.html', context)
 
+@superuser_required('index')
+def delete_user_view(request, id):
+  try:
+    user = User.objects.get(pk=id)
+  except User.DoesNotExist:
+    return redirect('user')
+
+  user.delete()
+  return redirect('user')
+
 @staff_required('index')
 def update_item_view(request, id):
   try:
