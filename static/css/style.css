@@ -89,3 +89,7 @@ input[type=email], select {
   width: 392px;
   padding-left: 8px;
 }
+
+a:hover {
+  text-decoration: none;
+}

@@ -3,6 +3,8 @@ from django.contrib.auth.models import User
 from django.contrib.auth import get_user_model
 from django.forms import ModelForm
 
+import datetime
+
 from .models import *
 
 class UserForm(ModelForm):
@@ -26,3 +28,10 @@ class ItemForm(ModelForm):
   class Meta:
     model = Item
     fields = '__all__'
+
+class NewsForm(ModelForm):
+  class Meta:
+    model = News
+    fields = ['title', 'body', 'image', 'date']
+
+  date = forms.DateField(initial=datetime.date.today, widget=forms.DateInput(attrs={'type': 'date'}))

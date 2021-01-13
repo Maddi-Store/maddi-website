@@ -15,6 +15,7 @@ from .models import *
 import http.client
 
 User = get_user_model()
+raja_ongkir_key = '41ba619db1e9c1ed92ae7cb1b59d9578'
 
 # @login_required(login_url="/login/")
 def index(request):
@@ -141,7 +142,7 @@ def update_item_view(request, id):
     'form': form,
   })
 
-@staff_required('index')
+@staff_required('item')
 def delete_item_view(request, id):
   try:
     item = Item.objects.get(pk=id)
@@ -152,7 +153,71 @@ def delete_item_view(request, id):
   return redirect('shop')
 
 def news(request):
-  return render(request, 'maddi_app/news.html')
+  news_list = News.objects.all()
+  paginator = Paginator(news_list, 10)
+
+  page = request.GET.get('page', 1)
+  try:
+    news = paginator.page(page)
+  except PageNotAnInteger:
+    news = paginator.page(1)
+  except EmptyPage:
+    news = paginator.page(paginator.num_pages)
+
+  return render(request, 'maddi_app/news.html', {
+    'news': news,
+  })
+
+@staff_required('news')
+def create_news_view(request):
+  form = NewsForm(request.POST or None, request.FILES or None)
+  if request.method == 'POST':
+    if form.is_valid():
+      news = form.save(commit=False)
+      news.user_id = request.user.id
+      news.save()
+      return redirect('news')
+
+  context = {
+    'form': form,
+  }
+
+  return render(request, 'maddi_app/news/create.html', {
+    'form': form,
+  })
+
+@staff_required('news')
+def update_news_view(request, id):
+  try:
+    news = News.objects.get(pk=id)
+  except News.DoesNotExist:
+    return redirect('news')
+    
+  form = NewsForm(request.POST or None, request.FILES or None, instance=news)
+  if request.method == 'POST':
+    if form.is_valid():
+      news = form.save(commit=False)
+      news.user_id = request.user.id
+      news.save()
+      return redirect('news')
+
+  context = {
+    'form': form,
+  }
+
+  return render(request, 'maddi_app/news/create.html', {
+    'form': form,
+  })
+
+@staff_required('news')
+def delete_news_view(request, id):
+  try:
+    news = News.objects.get(pk=id)
+  except News.DoesNotExist:
+    return redirect('news')
+
+  news.delete()
+  return redirect('news')
 
 def about(request):
   return render(request, 'maddi_app/about.html')
@@ -197,7 +262,21 @@ def delete_cart_view(request, id):
   return redirect('cart')
 
 def checkout(request):
-  return render(request, 'maddi_app/checkout.html')
+  customer_form = CustomerForm(request.POST or None, prefix='customer', instance=request.user.customer)
+  carts = Cart.objects.filter(customer=request.user.customer)
+  total_price = carts.aggregate(Sum('total_price'))
+
+  context = {
+    'customer_form': customer_form,
+    'total_price': total_price
+  }
+  return render(request, 'maddi_app/checkout.html', context)
+
+def payment_method(request):
+  return render(request, 'maddi_app/payment_method.html')
+
+def report(request):
+  return render(request, 'maddi_app/report.html')
 
 @login_required(login_url='login')
 def profile_view(request):
@@ -208,8 +287,8 @@ def profile_view(request):
   if request.method == 'POST':
     if user_form.is_valid():
       user = user_form.save(commit=False)
-      password = make_password(user_form.cleaned_data['password'])
-      if password:
+      if user_form.cleaned_data['password']:
+        password = make_password(user_form.cleaned_data['password'])
         user.password = password
 
       user.save()
@@ -282,7 +361,7 @@ def logout_view(request):
 def provinces(request):
   conn = http.client.HTTPSConnection("api.rajaongkir.com")
 
-  headers = { 'key': "833e8c949f70274cf9632f00c45919a8" }
+  headers = { 'key': raja_ongkir_key }
 
   conn.request("GET", "/starter/province", headers=headers)
 
@@ -294,7 +373,7 @@ def provinces(request):
 def cities(request, id=None):
   conn = http.client.HTTPSConnection("api.rajaongkir.com")
 
-  headers = { 'key': "833e8c949f70274cf9632f00c45919a8" }
+  headers = { 'key': raja_ongkir_key }
 
   if id:
     conn.request("GET", f"/starter/city?province={id}", headers=headers)
@@ -309,7 +388,7 @@ def cities(request, id=None):
 def city(request, id):
   conn = http.client.HTTPSConnection("api.rajaongkir.com")
 
-  headers = { 'key': "833e8c949f70274cf9632f00c45919a8" }
+  headers = { 'key': raja_ongkir_key }
 
   conn.request("GET", f"/starter/city?id={id}", headers=headers)
 
@@ -324,7 +403,7 @@ def cost(request, id):
   payload = f"origin=444&destination={id}&weight=1000&courier=jne"
 
   headers = {
-    'key': "833e8c949f70274cf9632f00c45919a8",
+    'key': raja_ongkir_key,
     'content-type': "application/x-www-form-urlencoded"
   }
 

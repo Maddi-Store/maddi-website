@@ -17,6 +17,7 @@ class News(models.Model):
   title = models.CharField(max_length=40)
   body = models.TextField()
   image = fields.ImageField(upload_to='news')
+  date = models.DateTimeField(null=True)
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
 
@@ -74,6 +75,11 @@ class Cart(models.Model):
 
 class Shipping(models.Model):
   purchase = models.OneToOneField(Purchase, on_delete=models.CASCADE)
+  receiver_name = models.CharField(max_length=40)
+  receiver_phone_number = models.CharField(max_length=12)
+  receiver_address = models.CharField(max_length=250)
+  receiver_city = models.PositiveIntegerField()
+  receiver_postal_code = models.IntegerField()
   status = models.CharField(max_length=20)
   courrier = models.ForeignKey(Courrier, on_delete=models.CASCADE)
   shipping_price = models.BigIntegerField()

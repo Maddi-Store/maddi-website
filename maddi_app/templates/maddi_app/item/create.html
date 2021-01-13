@@ -16,6 +16,11 @@
       {% csrf_token %}
 
       {{ form|crispy }}
+      <a href="{% url 'shop' %}">
+        <button type="button" class="px-4 py-1 text-black font-light tracking-wider bg-gray-100 hover:bg-gray-300 rounded">
+          Back
+        </button>
+      </a>
       <button type="submit" class="px-4 py-1 text-white font-light tracking-wider bg-gray-900 hover:bg-gray-800 rounded">
         {% if request.resolver_match.url_name == 'create_item' %}
           Create Product

@@ -1,0 +1,103 @@
+{% extends 'layouts/base.html' %}
+
+{% load static %}
+
+{% block content %}
+<div class="centered container mx-auto px-6 my-8">
+    <h1 class="text-center my-4 text-3xl">
+        Newsio
+    </h1>               
+
+
+    <ul class="list-group centered">
+          <div id="accordionExample">
+              <li>
+                <div class="card border-light mb-3">
+                <button class="" data-toggle="collapse" data-target="#collapse-{{ n.id }}" aria-expanded="true" aria-controls="collapse-{{ n.id }}">  
+
+                <div class="card-header" id="heading-{{ n.id }}">
+                  <div class="container">
+                      <div class="row">
+                        <div class="text-gray-500">
+                          <img class="w-10" src="https://img.favpng.com/5/13/1/computer-icons-payment-credit-card-electronic-funds-transfer-png-favpng-vYgX2V57UecR0YG4F1fHaGxM5.jpg">
+                            <!-- <h1 class="text-5xl">1</h1>
+                        </div>
+                        <div class="grid grid-cols-1 my-auto text-gray-500">
+                            <h1 class="text-md italic font-bold">2</h1>
+                            <h1 class="text-md italic">1000</h1> -->
+                        </div>
+                        <div class="mx-2 my-auto">
+                          <h5 class="mb-0 ml-2 text-3xl my-auto">
+                           Transfer antar Bank
+                          </h5>
+                        </div>
+                        <div class="col-lg">
+                        </div>
+                      </div>
+                  </div>
+                </div>
+                </button>
+            
+            
+                <div id="collapse-{{ n.id }}" class="collapse" aria-labelledby="heading-{{ n.id }}" data-parent="#accordionExample">
+                  <div class="card-body">
+                    <div class="container">
+                        <div class="row">
+                            <h1>Untuk Bank Jago AMPUUUNNNNN</h1>
+                        </div>
+                      </div>
+                  </div>
+                </div>
+              </div>
+            </li>                
+              <li>
+                <div class="card border-light mb-3">
+                <button class="" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="true" aria-controls="collapseTwo">  
+
+                <div class="card-header" id="headingTwo">
+                  <div class="container">
+                      <div class="row">
+                        <div class="text-gray-500">
+                          <div class="w-10">
+                            <img  src="https://theme.zdassets.com/theme_assets/1379487/2cb35fe96fa1191f49c2b769b50cf8b546fff65e.png">
+                          </div>
+                          <div class="my-1 w-10" >
+                            <img src="https://asset.kompas.com/crops/DAPlq4jQK0wFUY84bwiwcnX27kU=/0x0:780x390/780x390/data/photo/2017/01/11/1631493logo-black780x390.jpg">
+                          </div>
+                          
+
+                            <!-- <h1 class="text-5xl">1</h1>
+                        </div>
+                        <div class="grid grid-cols-1 my-auto text-gray-500">
+                            <h1 class="text-md italic font-bold">2</h1>
+                            <h1 class="text-md italic">1000</h1> -->
+                        </div>
+                        <div class="mx-2 my-auto">
+                          <h5 class="mb-0 ml-2 text-3xl my-auto">
+                           Transfer menggunakan OVO/GOPAY
+                          </h5>
+                        </div>
+                        <div class="col-lg">
+                        </div>
+                      </div>
+                  </div>
+                </div>
+                </button>
+            
+            
+                <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionExample">
+                  <div class="card-body">
+                    <div class="container">
+                        <div class="row">
+                            <h1>October Very Own</h1>
+                        </div>
+                      </div>
+                  </div>
+                </div>
+              </div>
+            </li>                           
+          </div>
+
+    </ul>
+  </div>
+{% endblock %}

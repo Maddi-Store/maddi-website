@@ -24,21 +24,20 @@
       <div class="w-full max-w-sm mx-auto rounded-md shadow-md overflow-hidden">
         <div class="flex items-end justify-end h-96 w-full bg-cover" style="background-image: url('{{ item.image.url }}'); background-position: center;">
           {% if user.is_superuser or user.is_staff %}
-          <button class="p-3 rounded-full bg-red-500 hover:bg-red-700 text-white mx-1 -mb-14 focus:outline-none">
-            <a href="{% url 'delete_item' id=item.id %}" class="hover:text-white" onclick="return confirm('Delete this item?')">
-              <div class="h-5 w-5">
-                <i class="fa fa-times" aria-hidden="true"></i>
-              </div>
+            <a href="{% url 'delete_item' id=item.id %}" class="hover:text-white -mb-14" onclick="return confirm('Delete this item?')">
+              <button class="p-3 rounded-full bg-red-500 hover:bg-red-700 text-white mx-2 focus:outline-none">
+                  <div class="h-5 w-5">
+                    <i class="fa fa-times" aria-hidden="true"></i>
+                  </div>
+              </button>
             </a>
-          </button>
-          <button class="p-3 rounded-full bg-yellow-500 hover:bg-yellow-700 text-white mx-1 -mb-14 focus:outline-none">
-            <a href="{% url 'update_item' id=item.id %}" class="hover:text-white">
-              <div class="h-5 w-5">
-                <i class="fa fa-pencil" aria-hidden="true"></i>
-              </div>
+            <a href="{% url 'update_item' id=item.id %}" class="hover:text-white -mb-14">
+              <button class="p-3 rounded-full bg-yellow-500 hover:bg-yellow-700 text-white mx-2 focus:outline-none">
+                  <div class="h-5 w-5">
+                    <i class="fa fa-pencil" aria-hidden="true"></i>
+                  </div>
+              </button>    
             </a>
-          </button>    
-          {% else %}
           {% endif %}
         </div>
         <div class="px-5 py-3">

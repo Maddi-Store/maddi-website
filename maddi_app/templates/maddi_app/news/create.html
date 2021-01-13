@@ -6,26 +6,26 @@
 {% block content %}
   <div class="container mx-auto px-6 my-8">
     <h3 class="text-gray-700 text-2xl font-medium mb-4">
-      {% if request.resolver_match.url_name == 'create_user' %}
-        Create User
+      {% if request.resolver_match.url_name == 'create_news' %}
+        Create News
       {% else %}
-        Update User
+        Update News
       {% endif %}
     </h3>
     <form method="POST" enctype="multipart/form-data">
       {% csrf_token %}
 
       {{ form|crispy }}
-      <a href="{% url 'user' %}">
+      <a href="{% url 'news' %}">
         <button type="button" class="px-4 py-1 text-black font-light tracking-wider bg-gray-100 hover:bg-gray-300 rounded">
           Back
         </button>
       </a>
       <button type="submit" class="px-4 py-1 text-white font-light tracking-wider bg-gray-900 hover:bg-gray-800 rounded">
-        {% if request.resolver_match.url_name == 'create_user' %}
-          Create User
+        {% if request.resolver_match.url_name == 'create_news' %}
+          Create News
         {% else %}
-          Update User
+          Update News
         {% endif %}
       </button>
     </form>

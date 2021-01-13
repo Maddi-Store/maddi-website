@@ -1,5 +1,6 @@
 crispy-tailwind
 django
+django-cors-headers 
 django-heroku
 django-material
 django-mysql
