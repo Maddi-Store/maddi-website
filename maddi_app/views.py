@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.hashers import make_password
 from django.core.paginator import Paginator
+from django.db.models import Sum
 from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.template import loader
@@ -144,45 +145,59 @@ def update_item_view(request, id):
 def delete_item_view(request, id):
   try:
     item = Item.objects.get(pk=id)
-  except item.DoesNotExist:
+  except Item.DoesNotExist:
     return redirect('shop')
 
   item.delete()
   return redirect('shop')
 
-def payment(request):
-  return render(request, 'maddi_app/payment.html')
-  
-def journal(request):
-  return render(request, 'maddi_app/journal.html')
+def news(request):
+  return render(request, 'maddi_app/news.html')
 
 def about(request):
   return render(request, 'maddi_app/about.html')
 
 def cart(request):
-  cart_list = Cart.objects.filter(customer=request.user.customer)
-  paginator = Paginator(cart_list, 10)
-
-  page = request.GET.get('page', 1)
-  try:
-    carts = paginator.page(page)
-  except PageNotAnInteger:
-    carts = paginator.page(1)
-  except EmptyPage:
-    carts = paginator.page(paginator.num_pages)
+  carts = Cart.objects.filter(customer=request.user.customer)
+  total_price = carts.aggregate(Sum('total_price'))
 
   return render(request, 'maddi_app/cart.html', {
     'carts': carts,
+    'total_price': total_price
   })
 
 @login_required(login_url='login')
 def add_to_cart(request):
   item = Item.objects.get(pk=request.POST.get('id'))
-  print(item.price)
-  cart = Cart(item=item, message=request.POST.get('message') or None, quantity=request.POST.get('quantity'), total_price=(item.price * int(request.POST.get('quantity'))), customer=request.user.customer)
+  
+  try:
+    cart = Cart.objects.get(customer=request.user.customer, item=item)
+    cart.quantity += int(request.POST.get('quantity'))
+    cart.total_price += item.price * int(request.POST.get('quantity'))
+  except Cart.DoesNotExist:
+    cart = Cart(item=item, message=request.POST.get('message') or None, quantity=request.POST.get('quantity'), total_price=(item.price * int(request.POST.get('quantity'))), customer=request.user.customer)
+
   cart.save()
 
   return redirect('cart')
+
+def update_cart_view(request):
+  cart = Cart.objects.get(pk=request.POST.get('id'))
+  cart.message = request.POST.get('message')
+  cart.quantity = request.POST.get('quantity')
+  cart.total_price = cart.item.price * int(cart.quantity)
+  cart.save()
+
+  return redirect('cart')
+
+def delete_cart_view(request, id):
+  cart = Cart.objects.get(pk=id)
+  cart.delete()
+
+  return redirect('cart')
+
+def checkout(request):
+  return render(request, 'maddi_app/checkout.html')
 
 @login_required(login_url='login')
 def profile_view(request):
