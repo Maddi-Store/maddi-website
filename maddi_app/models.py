@@ -60,8 +60,6 @@ class Review(models.Model):
 class Purchase(models.Model):
   customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
   items = models.ManyToManyField('Item', through='Cart', through_fields=('purchase', 'item'))
-  destination_address = models.CharField(max_length=250)
-  destination_city = models.PositiveIntegerField()
   cancellation = models.SmallIntegerField()
   created_at = models.DateTimeField(auto_now_add=True)
 
@@ -79,17 +77,19 @@ class Shipping(models.Model):
   receiver_phone_number = models.CharField(max_length=12)
   receiver_address = models.CharField(max_length=250)
   receiver_city = models.PositiveIntegerField()
+  receiver_city_name = models.CharField(max_length=50)
   receiver_postal_code = models.IntegerField()
   status = models.CharField(max_length=20)
   courrier = models.ForeignKey(Courrier, on_delete=models.CASCADE)
   shipping_price = models.BigIntegerField()
-  date_shipped = models.DateTimeField()
-  date_arrived = models.DateTimeField()
+  date_shipped = models.DateTimeField(null=True)
+  date_arrived = models.DateTimeField(null=True)
 
 class Payment(models.Model):
   purchase = models.OneToOneField(Purchase, on_delete=models.CASCADE)
   payment_amount = models.BigIntegerField()
-  date_paid = models.DateTimeField()
+  date_paid = models.DateTimeField(null=True)
   method = models.CharField(max_length=30)
   status = models.CharField(max_length=30)
   updated_at = models.DateTimeField(auto_now=True)
+  image = fields.ImageField(null=True, upload_to='payment')

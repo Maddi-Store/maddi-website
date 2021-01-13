@@ -5,7 +5,7 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.hashers import make_password
 from django.core.paginator import Paginator
 from django.db.models import Sum
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.template import loader
 
@@ -22,7 +22,10 @@ def index(request):
   return render(request, 'maddi_app/index.html')
 
 def shop(request):
-  item_list = Item.objects.all()
+  if request.GET.get('search'):
+    item_list = Item.objects.filter(name__icontains=request.GET.get('search'))
+  else:
+    item_list = Item.objects.all()
   paginator = Paginator(item_list, 12)
 
   page = request.GET.get('page', 1)
@@ -223,7 +226,7 @@ def about(request):
   return render(request, 'maddi_app/about.html')
 
 def cart(request):
-  carts = Cart.objects.filter(customer=request.user.customer)
+  carts = Cart.objects.filter(customer=request.user.customer, purchase__isnull=True)
   total_price = carts.aggregate(Sum('total_price'))
 
   return render(request, 'maddi_app/cart.html', {
@@ -236,7 +239,7 @@ def add_to_cart(request):
   item = Item.objects.get(pk=request.POST.get('id'))
   
   try:
-    cart = Cart.objects.get(customer=request.user.customer, item=item)
+    cart = Cart.objects.get(customer=request.user.customer, purchase__isnull=True, item=item)
     cart.quantity += int(request.POST.get('quantity'))
     cart.total_price += item.price * int(request.POST.get('quantity'))
   except Cart.DoesNotExist:
@@ -262,8 +265,26 @@ def delete_cart_view(request, id):
   return redirect('cart')
 
 def checkout(request):
-  customer_form = CustomerForm(request.POST or None, prefix='customer', instance=request.user.customer)
-  carts = Cart.objects.filter(customer=request.user.customer)
+  customer_form = CustomerForm(request.POST or None, instance=request.user.customer)
+  if request.method == 'POST':
+    purchase = Purchase(customer=request.user.customer, cancellation=0)
+    purchase.save()
+
+    post = request.POST
+    shipping = Shipping(purchase=purchase, receiver_name=post.get('receiver_name'), receiver_phone_number=post.get('phone_number'),
+      receiver_address=post.get('address'), receiver_city=post.get('city'), receiver_city_name=post.get('shipping_city'), receiver_postal_code=post.get('postal_code'), 
+      status='belum', courrier=Courrier.objects.get(pk=int(post.get('courrier'))), shipping_price=post.get('shipping_price')
+    )
+    shipping.save()
+
+    payment = Payment(purchase=purchase, payment_amount=int(post.get('payment_price')), status='belum', method=post.get('payment_method'))
+    payment.save()
+    
+    Cart.objects.filter(customer=request.user.customer, purchase__isnull=True).update(purchase=purchase)
+    
+    return redirect('retrieve_purchase', id=purchase.id)
+
+  carts = Cart.objects.filter(customer=request.user.customer, purchase__isnull=True)
   total_price = carts.aggregate(Sum('total_price'))
 
   context = {
@@ -275,6 +296,18 @@ def checkout(request):
 def payment_method(request):
   return render(request, 'maddi_app/payment_method.html')
 
+def retrieve_purchase(request, id):
+  purchase = Purchase.objects.get(pk=id)
+  carts = Cart.objects.filter(customer=request.user.customer, purchase=purchase)
+  total_price = carts.aggregate(Sum('total_price'))
+
+  return render(request, 'maddi_app/purchase/retrieve.html', {
+    'purchase': purchase,
+    'carts': carts,
+    'total_price': total_price
+  })
+
+@superuser_required('index')
 def report(request):
   return render(request, 'maddi_app/report.html')
 
@@ -413,3 +446,20 @@ def cost(request, id):
   data = res.read()
 
   return HttpResponse(data.decode("utf-8"))
+
+
+@superuser_required('index')
+def chart_maddi(request):
+  labels = []
+  data = []
+  from django.db.models.functions import TruncMonth, TruncYear
+  queryset = Payment.objects.filter(date_paid__isnull=False).annotate(month=TruncMonth('date_paid'), year=TruncYear('date_paid')).values('month', 'year').annotate(pendapatan=Sum('payment_amount')).values('month', 'year', 'pendapatan').order_by('year', 'month')
+
+  for entry in queryset:
+    labels.append(entry['month'].strftime("%b") + ' ' + entry['year'].strftime("%Y"))
+    data.append(entry['pendapatan'])
+  
+  return JsonResponse(data={
+    'labels': labels,
+    'data': data,
+  })
