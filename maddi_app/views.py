@@ -296,7 +296,17 @@ def checkout(request):
 def payment_method(request):
   return render(request, 'maddi_app/payment_method.html')
 
-def retrieve_purchase(request, id):
+def purchase(request):
+  if request.user.is_staff == False and request.user.is_superuser == False:
+    purchases = Purchase.objects.filter(customer=request.user.customer)
+  else:
+    purchases = Purchase.objects.all()
+
+  return render(request, 'maddi_app/purchase.html', {
+    'purchases': purchases
+  })
+
+def retrieve_purchase_view(request, id):
   purchase = Purchase.objects.get(pk=id)
   carts = Cart.objects.filter(customer=request.user.customer, purchase=purchase)
   total_price = carts.aggregate(Sum('total_price'))

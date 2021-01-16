@@ -1,0 +1,13 @@
+{% extends 'layouts/base.html' %}
+
+{% load static %}
+
+{% block content %}
+  {% for purchase in purchases %}
+    {{ purchase.payment.method }}
+    {{ purchase.shipping.receiver_address }}
+    {{ purchase.shipping.receiver_city_name }}
+    <br>
+  {% endfor %}
+
+{% endblock %}
