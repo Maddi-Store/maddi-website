@@ -79,12 +79,46 @@
                                             <div><i class="fa fa-circle-o" aria-hidden="true"> Item arrived</i></div>
                                         </div>
                                     </div>
-                                        </div>
-                                    </div>
-                                </div>
+                                 </div>
                             </div>
                         </div>
                     </div>
+                </div>
+                <div>
+                    <h3 class="text-gray-700 text-2xl font-medium mt-4 pb-12">Payment</h3>
+                    <h3 class="text-center text-gray-700 text-2xl font-medium">Upload payment confirmation</h3>
+                    <div class="m-auto px-2 py-4 max-w-xl">
+                    <div class="bg-white rounded border border-2" >
+                        <div>
+                            <img src="{{ purchase.payment.image }}" class="w-48 mr-3">
+                        </div>
+                        {% if user.is_superuser or user.is_staff %}
+                        <div class="text-center px-4 py-2 mt-2 bg-white">
+                            <a href="#">
+                                <button type="button" class="border border-gray-800 text-black rounded-md px-4 py-2 m-2 transition duration-500 ease select-none hover:text-white hover:bg-red-800 focus:outline-none focus:shadow-outline">
+                                  Decline payment
+                                </button>
+                            </a>
+                            <a href="#">
+                                <button type="button" class="border border-gray-800 text-black rounded-md px-4 py-2 m-2 transition duration-500 ease select-none hover:text-white hover:bg-green-800 focus:outline-none focus:shadow-outline">
+                                  Confirm payment
+                                </button>
+                            </a>           
+                        </div>
+                        {% else %}
+                        <div class="text-center px-4 py-2 mt-2 bg-white">
+                            <a href="#">
+                                <button type="button" class="border border-gray-800 text-black rounded-md px-4 py-2 m-2 transition duration-500 ease select-none hover:text-white hover:bg-gray-800 focus:outline-none focus:shadow-outline">
+                                  Upload payment confirmation
+                                </button>
+                            </a>  
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <hr class="pb-2 mt-2">
+                <div>
+                    <h3 class="text-gray-700 text-2xl font-medium mt-4 pb-12">Shipment</h3>
                 </div>
             </div>
         </div>

@@ -3,11 +3,43 @@
 {% load static %}
 
 {% block content %}
+  <div class="container px-12 my-8">
+  <h3 class="text-gray-700 text-2xl font-medium pb-12">Purchase</h3>
   {% for purchase in purchases %}
-    {{ purchase.payment.method }}
-    {{ purchase.shipping.receiver_address }}
-    {{ purchase.shipping.receiver_city_name }}
-    <br>
+    <div class="flex bg-white">
+      <div class="p-2">
+        {% if purchase.shipping.status !=  diterima %}
+          <a href="{% url 'retrieve_purchase' id=purchase.id %}">
+            <h3 class="text-gray-700 text-2xl font-medium">
+              <i class="fa fa-circle-o text-yellow-600 mr-2" aria-hidden="true"></i>
+              On-Process
+            </h3>
+          </a>
+        {% else %}
+          <a href="{% url 'retrieve_purchase' id=purchase.id %}">
+            <h3 class="text-gray-700 text-2xl font-medium">
+              <i class="fa fa-circle-o text-green-600 mr-2" aria-hidden="true"></i>
+              Completed
+            </h3>
+          </a>
+        {% endif %}
+      </div>
+    </div> 
+    <div class="ml-12 row w-1/2">
+      <div class="col">
+        Receiver : <br>
+        {{ purchase.shipping.receiver_name }}, {{ purchase.shipping.receiver_phone_number }} <br>
+        {{ purchase.shipping.receiver_address }}, {{ purchase.shipping.receiver_city_name }}, {{ purchase.shipping.receiver_postal_code }}<br>
+        Delivery Receipt : {{ purchase.shipping.delivery_receipt_number }}
+      </div>
+      <div class="col">
+        Payment Method : {{ purchase.payment.method }} <br>
+        Payment Status : {{ purchase.payment.status }} <br>
+        Shipping Courrier : {{ purchase.shipping.courrier }} <br>
+        Shipping Status : {{ purchase.shipping.status }} <br>
+      </div>
+    </div>     
+    <hr class="mb-4 mt-4">
   {% endfor %}
-
+  </div>
 {% endblock %}
