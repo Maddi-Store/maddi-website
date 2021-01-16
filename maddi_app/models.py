@@ -81,8 +81,8 @@ class Shipping(models.Model):
   receiver_postal_code = models.IntegerField()
   status = models.CharField(max_length=20)
   courrier = models.ForeignKey(Courrier, on_delete=models.CASCADE)
-  shipping_price = models.CharField(max_length=40)
-  delivery_receipt_number = models.BigIntegerField(null=True)
+  shipping_price = models.BigIntegerField()
+  delivery_receipt_number = models.CharField(max_length=40, null=True)
   date_shipped = models.DateTimeField(null=True)
   date_arrived = models.DateTimeField(null=True)
 
