@@ -4,42 +4,81 @@
 
 {% block content %}
   <div class="container px-12 my-8">
-  <h3 class="text-gray-700 text-2xl font-medium pb-12">Purchase</h3>
-  {% for purchase in purchases %}
-    <div class="flex bg-white">
-      <div class="p-2">
-        {% if purchase.shipping.status !=  diterima %}
+    <h3 class="text-gray-700 text-2xl font-medium pb-12">Purchase</h3>
+    {% for purchase in purchases %}
+      <div class="flex bg-white">
+        <div class="p-2">
+          {% if purchase.shipping.status ==  "diterima" %}
           <a href="{% url 'retrieve_purchase' id=purchase.id %}">
+            {% if user.is_superuser or user.is_staff %}
             <h3 class="text-gray-700 text-2xl font-medium">
-              <i class="fa fa-circle-o text-yellow-600 mr-2" aria-hidden="true"></i>
-              On-Process
+              <i class="fa fa-circle-o text-green-600 mr-2" aria-hidden="true"></i>
+              Completed ({{ purchase.customer.user }})
             </h3>
-          </a>
-        {% else %}
-          <a href="{% url 'retrieve_purchase' id=purchase.id %}">
+            {% else %}
             <h3 class="text-gray-700 text-2xl font-medium">
               <i class="fa fa-circle-o text-green-600 mr-2" aria-hidden="true"></i>
               Completed
             </h3>
+            {% endif %}
           </a>
-        {% endif %}
+          {% elif purchase.shipping.status != "diterima" %}
+            <a href="{% url 'retrieve_purchase' id=purchase.id %}">
+              {% if user.is_superuser or user.is_staff %}
+              <h3 class="text-gray-700 text-2xl font-medium">
+                <i class="fa fa-circle-o text-yellow-600 mr-2" aria-hidden="true"></i>
+                On-Process ({{ purchase.customer.user }})
+              </h3>
+              {% else %}
+              <h3 class="text-gray-700 text-2xl font-medium">
+                <i class="fa fa-circle-o text-yellow-600 mr-2" aria-hidden="true"></i>
+                On-Process
+              </h3>
+              {% endif %}
+            </a>
+          {% endif %}
+        </div>
+      </div> 
+      <div class="ml-12 row w-1/2">
+        <div class="col">
+          Receiver : <br>
+          {{ purchase.shipping.receiver_name }}, {{ purchase.shipping.receiver_phone_number }} <br>
+          {{ purchase.shipping.receiver_address }}, {{ purchase.shipping.receiver_city_name }}, {{ purchase.shipping.receiver_postal_code }}<br>
+          Delivery Receipt : {{ purchase.shipping.delivery_receipt_number }}
+        </div>
+        <div class="col">
+          Total price : {{ purchase.payment.payment_amount }} <br>
+          Payment Method : {{ purchase.payment.method }} <br>
+          Payment Status : {{ purchase.payment.status }} <br>
+          Shipping Courrier : {{ purchase.shipping.courrier }} <br>
+          Shipping Status : {{ purchase.shipping.status }} <br>
+        </div>
+      </div>     
+      <hr class="mb-4 mt-4">
+    {% endfor %}
+    
+    {% if purchases.has_other_pages %}
+      <div class="flex justify-center">
+        <div class="flex rounded-md mt-8">
+          {% if purchases.has_previous %}
+            <a href="?page={{ purchases.previous_page_number }}" class="py-2 px-4 leading-tight bg-white border border-gray-200 text-gray-500 border-r-0 ml-0 rounded-l hover:bg-yellow-500 hover:text-gray-600"><span>Previous</span></a>
+          {% else %}
+            <div class="py-2 px-4 leading-tight bg-white border border-gray-200 text-black border-r-0 ml-0 rounded-l"><span>Previous</span></div>
+          {% endif %}
+          {% for i in purchases.paginator.page_range %}
+            {% if purchases.number == i %}
+              <div class="py-2 px-4 leading-tight bg-white border border-gray-200 text-black border-r-0"><span>{{ i }}</span></div>
+            {% else %}
+              <a href="?page={{ i }}" class="py-2 px-4 leading-tight bg-white border border-gray-200 text-gray-500 border-r-0 hover:bg-yellow-500 hover:text-gray-600"><span>{{ i }}</span></a>
+            {% endif %}
+          {% endfor %}
+          {% if purchases.has_next %}
+            <a href="?page={{ purchases.next_page_number }}" class="py-2 px-4 leading-tight bg-white border border-gray-200 text-gray-500 rounded-r hover:bg-yellow-500 hover:text-gray-600"><span>Next</span></a>
+          {% else %}
+            <div class="py-2 px-4 leading-tight bg-white border border-gray-200 text-black rounded-r"><span>Next</span></div>
+          {% endif %}
+        </div>
       </div>
-    </div> 
-    <div class="ml-12 row w-1/2">
-      <div class="col">
-        Receiver : <br>
-        {{ purchase.shipping.receiver_name }}, {{ purchase.shipping.receiver_phone_number }} <br>
-        {{ purchase.shipping.receiver_address }}, {{ purchase.shipping.receiver_city_name }}, {{ purchase.shipping.receiver_postal_code }}<br>
-        Delivery Receipt : {{ purchase.shipping.delivery_receipt_number }}
-      </div>
-      <div class="col">
-        Payment Method : {{ purchase.payment.method }} <br>
-        Payment Status : {{ purchase.payment.status }} <br>
-        Shipping Courrier : {{ purchase.shipping.courrier }} <br>
-        Shipping Status : {{ purchase.shipping.status }} <br>
-      </div>
-    </div>     
-    <hr class="mb-4 mt-4">
-  {% endfor %}
+    {% endif %}
   </div>
 {% endblock %}

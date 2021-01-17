@@ -3,23 +3,36 @@ from django.contrib.auth import authenticate, login, logout, update_session_auth
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.hashers import make_password
+from django.core.mail import send_mail
 from django.core.paginator import Paginator
 from django.db.models import Sum
+from django.db.models.functions import TruncDate, TruncMonth, TruncYear
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.template import loader
 
+from maddi.settings import EMAIL_HOST_USER
+
 from .decorators import *
 from .forms import *
 from .models import *
+
+import datetime
 import http.client
+from dateutil.relativedelta import relativedelta
 
 User = get_user_model()
 raja_ongkir_key = '41ba619db1e9c1ed92ae7cb1b59d9578'
 
-# @login_required(login_url="/login/")
 def index(request):
-  return render(request, 'maddi_app/index.html')
+  news = News.objects.filter(date__gt=datetime.datetime.now()).order_by('-date')[:3]
+  items = Item.objects.all().order_by('-created_at')[:3]
+
+  context = {
+    'news': news,
+    'items': items
+  }
+  return render(request, 'maddi_app/index.html', context)
 
 def shop(request):
   if request.GET.get('search'):
@@ -156,7 +169,7 @@ def delete_item_view(request, id):
   return redirect('shop')
 
 def news(request):
-  news_list = News.objects.all()
+  news_list = News.objects.filter(date__gt=datetime.datetime.now()).order_by('-date')
   paginator = Paginator(news_list, 10)
 
   page = request.GET.get('page', 1)
@@ -225,6 +238,7 @@ def delete_news_view(request, id):
 def about(request):
   return render(request, 'maddi_app/about.html')
 
+@login_required(login_url='login')
 def cart(request):
   carts = Cart.objects.filter(customer=request.user.customer, purchase__isnull=True)
   total_price = carts.aggregate(Sum('total_price'))
@@ -249,6 +263,7 @@ def add_to_cart(request):
 
   return redirect('cart')
 
+@login_required(login_url='login')
 def update_cart_view(request):
   cart = Cart.objects.get(pk=request.POST.get('id'))
   cart.message = request.POST.get('message')
@@ -258,12 +273,14 @@ def update_cart_view(request):
 
   return redirect('cart')
 
+@login_required(login_url='login')
 def delete_cart_view(request, id):
   cart = Cart.objects.get(pk=id)
   cart.delete()
 
   return redirect('cart')
 
+@login_required(login_url='login')
 def checkout(request):
   customer_form = CustomerForm(request.POST or None, instance=request.user.customer)
   if request.method == 'POST':
@@ -280,7 +297,13 @@ def checkout(request):
     payment = Payment(purchase=purchase, payment_amount=int(post.get('payment_price')), status='belum', method=post.get('payment_method'))
     payment.save()
     
-    Cart.objects.filter(customer=request.user.customer, purchase__isnull=True).update(purchase=purchase)
+    carts = Cart.objects.filter(customer=request.user.customer, purchase__isnull=True)
+    for cart_item in carts:
+      item = Item.objects.get(pk=cart_item.item_id)
+      item.stock = item.stock - cart_item.quantity
+      item.save()
+
+    carts.update(purchase=purchase)
     
     return redirect('retrieve_purchase', id=purchase.id)
 
@@ -293,33 +316,107 @@ def checkout(request):
   }
   return render(request, 'maddi_app/checkout.html', context)
 
+@login_required(login_url='login')
 def payment_method(request):
   return render(request, 'maddi_app/payment_method.html')
 
+@login_required(login_url='login')
 def purchase(request):
   if request.user.is_staff == False and request.user.is_superuser == False:
-    purchases = Purchase.objects.filter(customer=request.user.customer)
+    purchases_list = Purchase.objects.filter(customer=request.user.customer).order_by('-id')
   else:
-    purchases = Purchase.objects.all()
+    purchases_list = Purchase.objects.all().order_by('-id')
+
+  paginator = Paginator(purchases_list, 10)
+
+  page = request.GET.get('page', 1)
+  try:
+    purchases = paginator.page(page)
+  except PageNotAnInteger:
+    purchases = paginator.page(1)
+  except EmptyPage:
+    purchases = paginator.page(paginator.num_pages)
 
   return render(request, 'maddi_app/purchase.html', {
     'purchases': purchases
   })
 
+@login_required(login_url='login')
 def retrieve_purchase_view(request, id):
   purchase = Purchase.objects.get(pk=id)
-  carts = Cart.objects.filter(customer=request.user.customer, purchase=purchase)
+  carts = Cart.objects.filter(purchase=purchase)
   total_price = carts.aggregate(Sum('total_price'))
 
-  return render(request, 'maddi_app/purchase/retrieve.html', {
+  context = {
     'purchase': purchase,
     'carts': carts,
     'total_price': total_price
-  })
+  }
+
+  if not request.user.is_staff and not request.user.is_superuser:
+    form = PaymentConfirmationForm(request.POST or None, request.FILES or None, instance=purchase.payment)
+    context['form'] = form
+    if request.method == 'POST' and form.is_valid():
+      form.save()
+      purchase.payment.status = 'sudah'
+      purchase.payment.save()
+
+      subject = f'Payment Proof Uploaded by {request.user}'
+      message = f'You have a payment proof to be reviewed from {request.user}'
+      recepient = 'segara2410@gmail.com'
+      send_mail(subject, message, EMAIL_HOST_USER, [recepient], fail_silently = False)
+
+  else:
+    form = ShipmentReceiptForm(request.POST or None, instance=purchase.shipping)
+    context['form'] = form
+    if request.method == 'POST' and form.is_valid():
+      form.save()
+      purchase.shipping.status = 'sudah'
+      purchase.shipping.save()
+
+  return render(request, 'maddi_app/purchase/retrieve.html', context)
+
+@staff_required('purchase')
+def process_payment_proof_view(request, id):
+  purchase = Purchase.objects.get(pk=id)
+  purchase.payment.status = request.POST.get('status')
+  purchase.payment.date_paid = datetime.datetime.now()
+  purchase.payment.save()
+
+  return redirect('retrieve_purchase', id)
+
+@login_required(login_url='login')
+def complete_purchase_view(request, id):
+  purchase = Purchase.objects.get(pk=id)
+  purchase.shipping.status = 'diterima'
+  purchase.shipping.save()
+  return redirect('retrieve_purchase', id)
+
+@login_required(login_url='login')
+def cancel_purchase_view(request, id):
+  purchase = Purchase.objects.get(pk=id)
+  carts = Cart.objects.filter(purchase=purchase)
+  
+  for cart_item in carts:
+    item = Item.objects.get(pk=cart_item.item_id)
+    item.stock = item.stock + cart_item.quantity
+    item.save()
+
+  carts.delete()
+  purchase.delete()
+  return redirect('purchase')
 
 @superuser_required('index')
-def report(request):
-  return render(request, 'maddi_app/report.html')
+def report_weekly(request):
+  return render(request, 'maddi_app/report_weekly.html')
+
+@superuser_required('index')
+def report_monthly(request):
+  return render(request, 'maddi_app/report_monthly.html')
+
+@superuser_required('index')
+def report_yearly(request):
+  return render(request, 'maddi_app/report_yearly.html')
 
 @login_required(login_url='login')
 def profile_view(request):
@@ -397,6 +494,7 @@ def register_view(request):
   }
   return render(request, 'accounts/register.html', context)
 
+@login_required(login_url='login')
 def logout_view(request):
   logout(request)
   return redirect('/')
@@ -459,15 +557,49 @@ def cost(request, id):
 
 
 @superuser_required('index')
-def chart_maddi(request):
+def chart_maddi_yearly(request):
   labels = []
   data = []
-  from django.db.models.functions import TruncMonth, TruncYear
-  queryset = Payment.objects.filter(date_paid__isnull=False).annotate(month=TruncMonth('date_paid'), year=TruncYear('date_paid')).values('month', 'year').annotate(pendapatan=Sum('payment_amount')).values('month', 'year', 'pendapatan').order_by('year', 'month')
+  queryset = Payment.objects.filter(date_paid__gte=datetime.datetime.now()-relativedelta(years=10)).annotate(year=TruncYear('date_paid')).values('year').annotate(pendapatan=Sum('payment_amount')).values('year', 'pendapatan').order_by('year')
+
+  for entry in queryset:
+    labels.append(entry['year'].strftime("%Y"))
+    data.append(entry['pendapatan'])
+  
+  return JsonResponse(data={
+    'labels': labels,
+    'data': data,
+  })
+
+@superuser_required('index')
+def chart_maddi_monthly(request):
+  labels = []
+  data = []
+  queryset = Payment.objects.filter(date_paid__gte=datetime.datetime.now()-relativedelta(years=1)).annotate(month=TruncMonth('date_paid'), year=TruncYear('date_paid')).values('month', 'year').annotate(pendapatan=Sum('payment_amount')).values('month', 'year', 'pendapatan').order_by('year', 'month')
 
   for entry in queryset:
     labels.append(entry['month'].strftime("%b") + ' ' + entry['year'].strftime("%Y"))
     data.append(entry['pendapatan'])
+  
+  return JsonResponse(data={
+    'labels': labels,
+    'data': data,
+  })
+
+@superuser_required('index')
+def chart_maddi_weekly(request):
+  labels = []
+  data = []
+  queryset = Payment.objects.filter(date_paid__gte=datetime.datetime.now()-relativedelta(months=3)).annotate(date=TruncDate('date_paid'), month=TruncMonth('date_paid'), year=TruncYear('date_paid')).values('date', 'month', 'year').annotate(sum=Sum('payment_amount')).order_by('year', 'month', 'date')
+
+  for entry in queryset:
+    print(entry)
+    try:
+      index = labels.index('Week ' + str((entry['date'].day-1)//7+1) + ' of ' + entry['month'].strftime("%B"))
+      data[index] += entry['sum']
+    except ValueError:
+      labels.append('Week ' + str((entry['date'].day-1)//7+1) + ' of ' + entry['month'].strftime("%B"))
+      data.append(entry['sum'])
   
   return JsonResponse(data={
     'labels': labels,

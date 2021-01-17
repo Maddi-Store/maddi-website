@@ -46,7 +46,10 @@
         </div>
         <div class="px-5 py-3">
           <a href="{% url 'retrieve_item' id=item.id %}"><h3 class="text-gray-700 uppercase">{{ item.name }}</h3></a>
-          <span class="text-gray-500 mt-2">Rp {{ item.price }}</span>
+          <span class="text-gray-500 mt-2">Rp {{ item.price }}</span><br>
+          {% if user.is_superuser or user.is_staff %}
+            <span class="text-gray-500 mt-2">Stok : {{ item.stock }}</span>
+          {% endif %}
         </div>
       </div>
       {% endfor %}

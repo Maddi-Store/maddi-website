@@ -1,0 +1,78 @@
+{% extends 'layouts/base.html' %}
+
+{% load static %}
+
+{% block content %}
+<div id="container" class="w-100 my-4" x-data="chart()" x-init="loadChart()">
+  <h1 class="text-center my-4 text-3xl">
+    Yearly Report
+  </h1> 
+  <canvas id="chart_maddi" class="px-20 py-8"></canvas>
+</div>
+{% endblock %}
+
+{% block js %}
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.js"></script>
+  <script>
+    const colors = ['#FFB5E8', '#FF9CEE'];
+
+    /* large line chart */
+    const chart_maddi = document.getElementById("chart_maddi");
+    const chartData = {
+      labels: [],
+      datasets: [{
+        data: [],
+        backgroundColor: colors[0],
+        borderColor: colors[1],
+        borderWidth: 1,
+        pointBackgroundColor: colors[0]
+      }]
+    };
+
+    function chart() {
+      return {
+        loadChart() {
+          axios.get('http://127.0.0.1:8000/chart_maddi_yearly').then(function (response) {
+            // handle success
+            chart = response.data;
+            chartData.labels = chart.labels;
+            chartData.datasets[0].data = chart.data;
+            if (chart_maddi) {
+              const ChartMonthly = new Chart(chart_maddi, {
+                type: 'bar',
+                data: chartData,
+                options: {
+                  tooltips: {
+                    enabled: true,
+                    mode: 'single',
+                    callbacks: {
+                      label: function(tooltipItems, data) { 
+                        return "Products sold: " + tooltipItems.yLabel;
+                      }
+                    }
+                  },
+                  scales: {
+                    yAxes: [{
+                      ticks: {
+                        beginAtZero: true
+                      }
+                    }]
+                  },
+                  legend: {
+                    display: false
+                  }
+                }
+              });
+              ChartMonthly.update();
+            }
+          }).catch(function (error) {
+              // handle error
+              console.log(error);
+          });
+          }
+        }
+    }
+
+    
+  </script>
+{% endblock %}

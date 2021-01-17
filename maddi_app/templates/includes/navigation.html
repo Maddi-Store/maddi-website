@@ -15,8 +15,28 @@
       <ul class="inline-flex">
         <li><a class="px-4 hover:text-gray-800 hover:bg-gray-50" href="{% url 'index' %}">Home</a></li>
         <li><a class="px-4 hover:text-gray-800 hover:bg-gray-50" href="{% url 'shop' %}">Shop</a></li>
+        <li><a class="px-4 hover:text-gray-800 hover:bg-gray-50" href="{% url 'payment_method' %}">Payment Method</a></li>
         <li><a class="px-4 hover:text-gray-800 hover:bg-gray-50" href="{% url 'about' %}">About</a></li>
         <li><a class="px-4 hover:text-gray-800 hover:bg-gray-50" href="{% url 'news' %}">News</a></li>
+        {% if user.is_superuser %}
+        <li><a class="px-4 hover:text-gray-800 hover:bg-gray-50" href="{% url 'user' %}">User</a></li>
+        <li>
+          <div class="relative inline-block text-left">
+            <div>
+              <a role="button" type="button" class="inline-flex justify-center w-full px-4 hover:text-gray-800 hover:bg-gray-50 focus:outline-none" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false"">
+                Report
+              </a>
+              <div class="dropdown-menu dropdown-menu-right">
+                <div class="py-1">
+                  <a href="{% url 'report_weekly' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900" role="menuitem">Weekly</a>
+                  <a href="{% url 'report_monthly' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900" role="menuitem">Monthly</a>
+                  <a href="{% url 'report_yearly' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900" role="menuitem">Yearly</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </li>
+        {% endif %}
         {% if user.is_authenticated %}
           <li>
             <div class="relative inline-block text-left">

@@ -35,3 +35,13 @@ class NewsForm(ModelForm):
     fields = ['title', 'body', 'image', 'date']
 
   date = forms.DateField(initial=datetime.date.today, widget=forms.DateInput(attrs={'type': 'date'}))
+
+class PaymentConfirmationForm(ModelForm):
+  class Meta:
+    model = Payment
+    fields = ['image']
+
+class ShipmentReceiptForm(ModelForm):
+  class Meta:
+    model = Shipping
+    fields = ['delivery_receipt_number']
