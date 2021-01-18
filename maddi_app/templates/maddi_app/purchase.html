@@ -41,6 +41,7 @@
       </div> 
       <div class="ml-12 row w-1/2">
         <div class="col">
+          <b>Date: {{ purchase.created_at|date:"d-m-Y" }}</b><br>
           Receiver : <br>
           {{ purchase.shipping.receiver_name }}, {{ purchase.shipping.receiver_phone_number }} <br>
           {{ purchase.shipping.receiver_address }}, {{ purchase.shipping.receiver_city_name }}, {{ purchase.shipping.receiver_postal_code }}<br>

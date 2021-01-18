@@ -14,7 +14,7 @@ class UserForm(ModelForm):
 
   class Meta:
     model = get_user_model()
-    fields = ['username', 'email', 'password', 'first_name', 'last_name']
+    fields = ['username', 'email', 'password', 'first_name', 'last_name', 'is_staff', 'is_superuser']
 
 class ProfileForm(UserForm):
   password = forms.CharField(widget=forms.PasswordInput(), required=False, help_text="Leave this field blank to keep the old password.")

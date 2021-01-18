@@ -26,7 +26,7 @@ raja_ongkir_key = '41ba619db1e9c1ed92ae7cb1b59d9578'
 
 def index(request):
   news = News.objects.filter(date__gt=datetime.datetime.now()).order_by('-date')[:3]
-  items = Item.objects.all().order_by('-created_at')[:3]
+  items = Item.objects.all().order_by('-id')[:3]
 
   context = {
     'news': news,
@@ -36,9 +36,9 @@ def index(request):
 
 def shop(request):
   if request.GET.get('search'):
-    item_list = Item.objects.filter(name__icontains=request.GET.get('search'))
+    item_list = Item.objects.filter(name__icontains=request.GET.get('search')).order_by('-id')
   else:
-    item_list = Item.objects.all()
+    item_list = Item.objects.all().order_by('-id')
   paginator = Paginator(item_list, 12)
 
   page = request.GET.get('page', 1)
@@ -361,7 +361,7 @@ def retrieve_purchase_view(request, id):
       purchase.payment.status = 'sudah'
       purchase.payment.save()
 
-      subject = f'Payment Proof Uploaded by {request.user}'
+      subject = f'MADDI | Payment Proof Uploaded by {request.user}'
       message = f'You have a payment proof to be reviewed from {request.user}'
       recepient = 'segara2410@gmail.com'
       send_mail(subject, message, EMAIL_HOST_USER, [recepient], fail_silently = False)
