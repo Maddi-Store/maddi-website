@@ -363,7 +363,7 @@ def retrieve_purchase_view(request, id):
 
       subject = f'MADDI | Payment Proof Uploaded by {request.user}'
       message = f'You have a payment proof to be reviewed from {request.user}'
-      recepient = 'segara2410@gmail.com'
+      recepient = 'privilage123456@gmail.com
       send_mail(subject, message, EMAIL_HOST_USER, [recepient], fail_silently = False)
 
   else:
